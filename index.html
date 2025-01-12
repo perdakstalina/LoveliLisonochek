@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Кроссворд для Лисёночка</title>
+  <!-- Мета-тег для адаптивности на мобильных -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    /* ============ БАЗОВЫЙ СТИЛЬ ============ */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Comic Sans MS", cursive, sans-serif;
+      background: linear-gradient(135deg, #ffe6f2 0%, #ffd9ec 100%);
+    }
+
+    h1, h2, h3 {
+      text-align: center;
+      color: #ff66cc;
+      margin-top: 20px;
+      text-shadow: 1px 1px 2px #fff;
+    }
+
+    .music-button {
+      display: block;
+      margin: 20px auto;
+      background-color: #ff66cc;
+      color: white;
+      font-size: 16px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 20px;
+      box-shadow: 0 5px 10px rgba(255, 105, 180, 0.3);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .music-button:hover {
+      transform: scale(1.05);
+    }
+
+    .crosswords-container {
+      width: 95%;
+      max-width: 800px;
+      margin: 0 auto 50px auto;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+      padding-bottom: 30px;
+    }
+
+    /* ------ Блок кроссворда ------ */
+    .crossword-block {
+      background-color: #fff0f5;
+      border: 2px solid #ffb6c1;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(255, 182, 193, 0.4);
+      padding: 20px;
+      display: none; /* по умолчанию скрыты */
+    }
+    .crossword-block.active {
+      display: block; /* показываем только текущий */
+    }
+
+    .clues {
+      color: #ff1493;
+      font-weight: bold;
+      margin-bottom: 10px;
+      white-space: pre-line;
+      text-shadow: 0 0 1px #fff;
+      font-size: 14px;
+    }
+
+    /* Таблица кроссворда */
+    table {
+      border-collapse: collapse;
+      margin: 0 auto;
+      user-select: none;
+    }
+    td {
+      width: 40px;
+      height: 40px;
+      border: 1px solid #ffb6c1;
+      text-align: center;
+      vertical-align: middle;
+      background: #ffeef5;
+    }
+
+    input.crossword-input {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background-color: transparent;
+      font-size: 16px;
+      font-weight: bold;
+      color: #cc0066;
+      text-align: center;
+    }
+    input.crossword-input:focus {
+      outline: 2px solid #ff66cc;
+      background-color: #fff;
+    }
+
+    .check-button {
+      display: block;
+      margin: 20px auto 0 auto;
+      background-color: #ff1493;
+      color: #fff;
+      border: none;
+      border-radius: 15px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .check-button:hover {
+      background-color: #ff66cc;
+    }
+
+    /* ------ Блок с приятными словами (по умолчанию скрытый) ------ */
+    .final-message {
+      display: none;
+      text-align: center;
+      margin: 40px;
+    }
+    .final-message.active {
+      display: block;
+    }
+
+    /* ------ Окно с разгаданным словом ------ */
+    .revealed-box {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fffbfc;
+      border: 3px solid #ffb6c1;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(255, 182, 193, 0.4);
+      width: 300px;
+      max-width: 80%;
+      padding: 20px;
+      text-align: center;
+      display: none;
+    }
+    .revealed-box.active {
+      display: block;
+    }
+    .revealed-title {
+      color: #ff1493;
+      font-size: 18px;
+      margin-bottom: 15px;
+      text-shadow: 0 0 1px #fff;
+    }
+    .continue-button {
+      background-color: #ff66cc;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .continue-button:hover {
+      background-color: #ff1493;
+    }
+
+    /* ============ АДАПТИВНОСТЬ ДЛЯ МОБИЛЬНЫХ ============ */
+    @media (max-width: 600px) {
+      /* Уменьшим размер ячеек на телефонах */
+      td {
+        width: 30px;
+        height: 30px;
+      }
+      input.crossword-input {
+        font-size: 14px;
+      }
+      .check-button,
+      .music-button,
+      .continue-button {
+        font-size: 14px;
+        padding: 8px 16px;
+      }
+      .revealed-box {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Романтический кроссворд</h1>
+  <h3>Тут всё просто, просто отгадываешь словечки и получаешь фразочки, в этот раз можешь их не записывать, в конце всё увидишь, а и подсказка, запомни её ИГЛУ-домик, надеюсь ты запомнишь и в определённый момент запомнишь, ну и не забывай включать трек, и удачки, люблю тебя❤️</h3>
+
+  <!-- Аудио с loop для зацикливания -->
+  <audio id="myAudio" src="music.mp3" loop></audio>
+  <button class="music-button" onclick="document.getElementById('myAudio').play()">
+    Включить музыку
+  </button>
+
+  <div class="crosswords-container">
+
+    <!-- ======= КРОССВОРД #1 ======= -->
+    <div class="crossword-block active" id="crossword1">
+      <h2>Кроссворд #1</h2>
+      <p class="clues">
+(5 строк по горизонтали)  
+1) Круглый фрукт, растёт на дереве, может быть сладким или кислым.  
+2) Полосатый хищник, большая кошка из джунглей.  
+3) Колючее лесное животное (писать через Е).  
+4) Жёлтый тропический фрукт, любимый обезьянами.  
+5) Шумное и яркое место торга и гуляний.
+      </p>
+
+      <!-- 5 строк (без упоминания ответов) -->
+      <table>
+        <!-- row1: 6 букв -->
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+        <!-- row2: 4 буквы -->
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+        <!-- row3: 4 буквы -->
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+        <!-- row4: 5 букв -->
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+        <!-- row5: 7 букв -->
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+      </table>
+      <button class="check-button" onclick="checkCrossword(1)">Проверить</button>
+    </div>
+
+    <!-- ======= КРОССВОРД #2 ======= -->
+    <div class="crossword-block" id="crossword2">
+      <h2>Кроссворд #2</h2>
+      <p class="clues">
+(5 строк по горизонтали)  
+1) Для освещения комнаты.  
+2) Круглая дата, праздник.  
+3) Ударный музыкальный инструмент.  
+4) Я тебя так назваю, за твою любовь к шоколадкам❤️  
+5) Специалист по законам.
+      </p>
+      <table>
+        <!-- 5,6,7,4,5 букв (не пишем ответы в подсказках) -->
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+      </table>
+      <button class="check-button" onclick="checkCrossword(2)">Проверить</button>
+    </div>
+
+    <!-- ======= КРОССВОРД #3 ======= -->
+    <div class="crossword-block" id="crossword3">
+      <h2>Кроссворд #3</h2>
+      <p class="clues">
+(2 строки по горизонтали)  
+1) Полосатое африканское животное, похоже на лошадь.  
+2) Большая зелёная ягода мы её летом любим кушать).
+      </p>
+      <table>
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+      </table>
+      <button class="check-button" onclick="checkCrossword(3)">Проверить</button>
+    </div>
+
+    <!-- ======= КРОССВОРД #4 ======= -->
+    <div class="crossword-block" id="crossword4">
+      <h2>Кроссворд #4</h2>
+      <p class="clues">
+(4 строки по горизонтали)  
+1) Огромный хвойный лес в Сибири.  
+2) Колебания на воде.  
+3) Земля, окружённая водой.  
+4) Инструмент для шитья.
+      </p>
+      <table>
+        <!-- 5,5,6,4 -->
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+          <td><input type="text" maxlength="1" class="crossword-input" /></td>
+        </tr>
+      </table>
+      <button class="check-button" onclick="checkCrossword(4)">Проверить</button>
+    </div>
+
+    <!-- ======= КРОССВОРД #5 ======= -->
+    <div class="crossword-block" id="crossword5">
+      <h2>Кроссворд #5</h2>
+      <p class="clues">
+(10 строк по горизонтали)  
+1) Сладкий кристаллический продукт (люблю его просто так кушац).  
+2) Жёлтый кислый цитрус.  
+3) Вооружённые силы.  
+4) Высокое растение с корой.  
+5) То, что мы употребляем в пищу. (3 буквы).  
+6) Противоположность «старый».  
+7) Одиночная буква без хвостика (говорят ещё, что она слишком мягкая))).  
+8) Горячее блюдо из злаков.  
+9) Инструмент для шитья.  
+10) Хвойное дерево (короткое слово).
+      </p>
+      <table>
+        <!-- 5,5,5,6,3,5,1,4,4,3 -->
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+      </table>
+      <button class="check-button" onclick="checkCrossword(5)">Проверить</button>
+    </div>
+
+    <!-- ======= КРОССВОРД #6 ======= -->
+    <div class="crossword-block" id="crossword6">
+      <h2>Кроссворд #6</h2>
+      <p class="clues">
+(7 строк по горизонтали)  
+1) Домашнее животное с рогами, даёт шерсть.  
+2) Медленное существо с раковиной на спине.  
+3) Белая грациозная птица с длинной шеей.  
+4) Музыкальный жанр с певцами и оркестром, там в основном поют.  
+5) Морская или речная птица, кричащая над волнами.  
+6) Я не знаю как это объянисть, но это нзавание того, где нарисовано (слово простое).  
+7) Жилище эскимосов из снега или льда.
+      </p>
+      <table>
+        <!-- 5,6,6,5,5,7,4 -->
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+          <td><input type="text" class="crossword-input" maxlength="1" /></td>
+        </tr>
+      </table>
+      <button class="check-button" onclick="checkCrossword(6)">Проверить</button>
+    </div>
+  </div>
+
+  <!-- Блок с приятными словами (изначально скрыт) -->
+  <div class="final-message" id="finalMessage">
+    <h2>Поздравляю!</h2>
+    <p>Ты разгадала все загадки! Я так рад, что у меня есть ты❤️</p>
+    <p>«Я тебя люблю, за твои сладенькие булочки.»</p>
+    <p>А вот за какие именно надо хорошо подумать, хотя ответ тут очевиден и за те которые ты печешь и за твои родненькие, которые для меня как антистресс🥰</p>
+    <p>Надеюсь ты немного отвлеклась от подготовок и щас улыбнулась от результата кроссворда, я тебя люблю и все твои булочки люблю❤️</p>
+  </div>
+
+  <!-- Окно с "разгаданным словом" (после проверки) -->
+  <div class="revealed-box" id="revealedBox">
+    <div class="revealed-title" id="revealedTitle"></div>
+    <button class="continue-button" onclick="goToNextCrossword()">Продолжить</button>
+  </div>
+
+  <script>
+    /************************************************
+     * ВЕРТИКАЛЬНЫЕ СЛОВА (для вывода после проверки)
+     ***********************************************/
+    const verticalWords = [
+      "ЯТЕБЯ",       // #1
+      "ЛЮБЛЮ",       // #2
+      "ЗА",          // #3
+      "ТВОИ",        // #4
+      "СЛАДЕНЬКИЕ",  // #5
+      "БУЛОЧКИ"      // #6
+    ];
+
+    /************************************************
+     * ПРАВИЛЬНЫЕ ОТВЕТЫ (горизонтальные)
+     * - Не отображаются в подсказках, но нужны для проверки
+     ***********************************************/
+    // #1: (5 строк) "ЯБЛОКО", "ТИГР", "ЕЖИК", "БАНАН", "ЯРМАРКА"
+    const answers1 = [ "ЯБЛОКО", "ТИГР", "ЕЖИК", "БАНАН", "ЯРМАРКА" ];
+
+    // #2: (5 строк) "ЛАМПА", "ЮБИЛЕЙ", "БАРАБАН", "ЛИСА", "ЮРИСТ"
+    const answers2 = [ "ЛАМПА", "ЮБИЛЕЙ", "БАРАБАН", "ЛИСА", "ЮРИСТ" ];
+
+    // #3: (2 строки) "ЗЕБРА", "АРБУЗ"
+    const answers3 = [ "ЗЕБРА", "АРБУЗ" ];
+
+    // #4: (4 строки) "ТАЙГА", "ВОЛНА", "ОСТРОВ", "ИГЛА"
+    const answers4 = [ "ТАЙГА", "ВОЛНА", "ОСТРОВ", "ИГЛА" ];
+
+    // #5: (10 строк) "САХАР", "ЛИМОН", "АРМИЯ", "ДЕРЕВО", "ЕДА",
+    //               "НОВЫЙ", "Ь", "КАША", "ИГЛА", "ЕЛЬ"
+    const answers5 = [
+      "САХАР", "ЛИМОН", "АРМИЯ", "ДЕРЕВО", "ЕДА",
+      "НОВЫЙ", "Ь", "КАША", "ИГЛА", "ЕЛЬ"
+    ];
+
+    // #6: (7 строк) "БАРАН", "УЛИТКА", "ЛЕБЕДЬ", "ОПЕРА", "ЧАЙКА", "КАРТИНА", "ИГЛУ"
+    const answers6 = [
+      "БАРАН", "УЛИТКА", "ЛЕБЕДЬ",
+      "ОПЕРА", "ЧАЙКА", "КАРТИНА",
+      "ИГЛУ"
+    ];
+
+    /************************************************
+     * ОТЛЕЖИВАЕМ, КАКОЙ КРОССВОРД ТЕКУЩИЙ
+     ***********************************************/
+    let currentCrossword = 1;
+
+    /************************************************
+     * ПРИ ЗАГРУЗКЕ СТРАНИЦЫ
+     ***********************************************/
+    window.addEventListener("DOMContentLoaded", () => {
+      // Показываем первый кроссворд:
+      showCrossword(1);
+
+      // Включаем автоматический переход по клеткам
+      const allInputs = document.querySelectorAll(".crossword-input");
+      allInputs.forEach((input, index) => {
+        input.addEventListener("input", () => {
+          if (input.value.length === input.maxLength) {
+            // Переход к следующему инпуту, если есть
+            if (index < allInputs.length - 1) {
+              allInputs[index + 1].focus();
+            }
+          }
+        });
+      });
+    });
+
+    /************************************************
+     * ПОКАЗАТЬ КРОССВОРД (по номеру)
+     ***********************************************/
+    function showCrossword(num) {
+      // Скрываем все
+      for (let i = 1; i <= 6; i++) {
+        const block = document.getElementById("crossword" + i);
+        if (block) block.classList.remove("active");
+      }
+      // Показываем нужный
+      const thisBlock = document.getElementById("crossword" + num);
+      if (thisBlock) {
+        thisBlock.classList.add("active");
+        currentCrossword = num;
+      }
+    }
+
+    /************************************************
+     * ПОСЛЕ УСПЕШНОЙ ПРОВЕРКИ ПОКАЗЫВАЕМ ОКНО
+     * С РАЗГАДАННЫМ СЛОВОМ
+     ***********************************************/
+    function showRevealedWord(word) {
+      const box = document.getElementById("revealedBox");
+      const title = document.getElementById("revealedTitle");
+      title.textContent = "Разгаданное слово: " + word;
+      box.classList.add("active");
+    }
+
+    /************************************************
+     * ПРИ НАЖАТИИ "ПРОДОЛЖИТЬ" В ОКНЕ
+     ***********************************************/
+    function goToNextCrossword() {
+      // Скрываем окно
+      document.getElementById("revealedBox").classList.remove("active");
+
+      // Если последний кроссворд был #6:
+      if (currentCrossword === 6) {
+        // Показать финальное сообщение
+        document.getElementById("crossword6").classList.remove("active");
+        document.getElementById("finalMessage").classList.add("active");
+      } else {
+        // Иначе перейти к следующему
+        const next = currentCrossword + 1;
+        document.getElementById("crossword" + currentCrossword).classList.remove("active");
+        showCrossword(next);
+      }
+    }
+
+    /************************************************
+     * ПРОВЕРКА КРОССВОРДА (при нажатии "Проверить")
+     ***********************************************/
+    function checkCrossword(num) {
+      let isCorrect = false;
+      let answers;
+
+      switch (num) {
+        case 1: answers = answers1; break;
+        case 2: answers = answers2; break;
+        case 3: answers = answers3; break;
+        case 4: answers = answers4; break;
+        case 5: answers = answers5; break;
+        case 6: answers = answers6; break;
+      }
+
+      isCorrect = checkPuzzle("crossword" + num, answers);
+      if (isCorrect) {
+        // Показать окошко с разгаданным вертикальным словом
+        showRevealedWord(verticalWords[num - 1]);
+      } else {
+        alert("Где-то допущена ошибка. Проверь ещё раз!");
+      }
+    }
+
+    /************************************************
+     * ФУНКЦИЯ: СВЕРЯЕМ ВВОД С ОТВЕТАМИ
+     ***********************************************/
+    function checkPuzzle(blockId, answers) {
+      const block = document.getElementById(blockId);
+      const rows = block.querySelectorAll("table tr");
+
+      // Проверка: кол-во строк = кол-ву ответов
+      if (rows.length !== answers.length) {
+        console.error("Ошибка: кол-во строк не совпадает с кол-вом ответов");
+        return false;
+      }
+
+      for (let r = 0; r < rows.length; r++) {
+        let userWord = "";
+        const cells = rows[r].querySelectorAll("td");
+        for (let c = 0; c < cells.length; c++) {
+          const input = cells[c].querySelector("input");
+          if (input) {
+            userWord += (input.value || "").toUpperCase();
+          }
+        }
+        // Сравниваем
+        if (userWord !== answers[r].toUpperCase()) {
+          return false;
+        }
+      }
+      return true;
+    }
+  </script>
+</body>
+</html>
